@@ -29,7 +29,7 @@ func _input(event: InputEvent) -> void:
 # Sets the target position for the navigation agent based on a raycast.
 func set_navigation_target() -> void:
 	var camera: Camera3D = get_tree().get_nodes_in_group("Camera")[0] as Camera3D
-	var mouse_pos: Vector2 = get_viewport().get_mouse_position()
+	var mouse_pos: Vector2 = $"../UICanvasLayer/HBoxContainer/LeftCamera/SubViewport".get_mouse_position()
 	var ray_length: float = 100.0
 	
 	var ray_origin: Vector3 = camera.project_ray_origin(mouse_pos)

@@ -1,6 +1,23 @@
-[gd_scene load_steps=11 format=3 uid="uid://cs211ag68yvo3"]
+[gd_scene load_steps=13 format=3 uid="uid://cs211ag68yvo3"]
 
 [ext_resource type="Script" path="res://player.gd" id="1_nho6l"]
+[ext_resource type="PackedScene" uid="uid://c5dvjncikgj1j" path="res://Test2DScene.tscn" id="2_pc4ve"]
+
+[sub_resource type="GDScript" id="GDScript_lsp8a"]
+script/source = "extends CanvasLayer
+
+@export var right_cam: PackedScene
+
+func _ready() -> void:
+	#var cam_node = right_cam.get_node(\"/root/Test2dScene/SubViewport\")
+	#var cam_node = right_cam.get_node(\"SubViewport\")
+	#var world = cam_node.find_world_2d()
+	#$HBoxContainer/RightCamera/SubViewport.world_2d = world
+	pass
+
+func _process(delta: float) -> void:
+	pass
+"
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_2uvcp"]
 vertices = PackedVector3Array(-14.2395, 0.0341503, -11.4694, -14.2395, 0.0341503, 11.5306, 14.2605, 0.0341503, 11.5306, 14.2605, 0.0341503, -11.4694)
@@ -28,12 +45,52 @@ sky = SubResource("Sky_yh0hm")
 
 [node name="Node3D" type="Node3D"]
 
+[node name="UICanvasLayer" type="CanvasLayer" parent="."]
+script = SubResource("GDScript_lsp8a")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UICanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="LeftCamera" type="SubViewportContainer" parent="UICanvasLayer/HBoxContainer"]
+custom_minimum_size = Vector2(768, 200)
+layout_mode = 2
+size_flags_horizontal = 2
+
+[node name="SubViewport" type="SubViewport" parent="UICanvasLayer/HBoxContainer/LeftCamera"]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(768, 720)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="UICanvasLayer/HBoxContainer/LeftCamera/SubViewport" groups=["Camera"]]
+transform = Transform3D(1, 0, 0, 0, 0.608761, 0.793353, 0, -0.793353, 0.608761, 0, 56.704, 42.722)
+fov = 30.0
+
+[node name="RightCamera" type="SubViewportContainer" parent="UICanvasLayer/HBoxContainer"]
+custom_minimum_size = Vector2(512, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+metadata/_edit_use_anchors_ = true
+
+[node name="SubViewport" type="SubViewport" parent="UICanvasLayer/HBoxContainer/RightCamera"]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(512, 720)
+render_target_update_mode = 4
+
+[node name="Test2dScene" parent="UICanvasLayer/HBoxContainer/RightCamera/SubViewport" instance=ExtResource("2_pc4ve")]
+
 [node name="PlatformNavigationRegion3D" type="NavigationRegion3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.395598, 0.4939, -0.240534)
 navigation_mesh = SubResource("NavigationMesh_2uvcp")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="PlatformNavigationRegion3D"]
-transform = Transform3D(29.4791, 0, 0, 0, 0.0316994, 0, 0, 0, 23.9388, 0, 0, 0)
+transform = Transform3D(33.6934, 0, 0, 0, 0.0316994, 0, 0, 0, 23.9388, 0, 0, 0)
 mesh = SubResource("BoxMesh_apsro")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="PlatformNavigationRegion3D/MeshInstance3D"]
@@ -60,9 +117,6 @@ target_desired_distance = 0.1
 [node name="PlayerFaceMeshInstance3D" type="MeshInstance3D" parent="PlayerBody3D"]
 transform = Transform3D(0.0038778, -0.0177183, -0.999339, -0.801976, -0.0647865, 0, -0.106566, 0.486916, -0.0363647, -0.0105491, 1.71657, -0.326917)
 mesh = SubResource("CapsuleMesh_81vyy")
-
-[node name="Camera3D" type="Camera3D" parent="." groups=["Camera"]]
-transform = Transform3D(1, 0, 0, 0, 0.760055, 0.649859, 0, -0.649859, 0.760055, -0.476257, 20.2354, 16.171)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_vt57f")
