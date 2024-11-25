@@ -105,6 +105,9 @@ func set_navigation_target() -> void:
 		# If no hit, set the navigation target to the current position
 		target_position = global_position
 	
+	# Clamp the navigation target within the platform bounds
+	target_position = clamp_vector3(target_position, platform_bounds_min, platform_bounds_max)
+	
 	# Update the navigation agent with the new target position
 	navigation_agent.target_position = target_position
 
