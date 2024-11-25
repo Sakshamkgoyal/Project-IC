@@ -1,15 +1,26 @@
 extends CharacterBody3D
 
 @onready var navigation_agent: NavigationAgent3D = $PlayerNavigationAgent3D
+@onready var platform_navigation_region: Node3D = $PlatformNavigationRegion3D  # Assuming it’s a sibling node
 
 var speed: float = 7.0
 var target_position: Vector3 = Vector3.ZERO
+var move_direction: Vector3 = Vector3.ZERO
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+	# Update movement direction based on WASD input.
+	handle_wasd_movement(delta)
+	
 	# Check if the navigation is finished, if not move to the target point
 	if not navigation_agent.is_navigation_finished():
 		move_to_point(delta)
+	else:
+		# If we have a navigation target, move towards it using WASD input
+		apply_input_movement(delta)
+	
+	# Apply platform navigation constraints, if necessary
+	handle_platform_navigation()
 
 # Move the character towards the next navigation point.
 func move_to_point(delta: float) -> void:
@@ -23,6 +34,35 @@ func move_to_point(delta: float) -> void:
 	face_direction(target_pos)
 	
 	# Apply movement using move_and_slide
+	move_and_slide()
+
+# Handle WASD input movement.
+func handle_wasd_movement(delta: float) -> void:
+	move_direction = Vector3.ZERO
+	
+	# Get input for WASD keys
+	if Input.is_action_pressed("MoveForward"):  # W key
+		move_direction.z -= 1
+	if Input.is_action_pressed("MoveBackward"):  # S key
+		move_direction.z += 1
+	if Input.is_action_pressed("MoveRight"):  # D key
+		move_direction.x -= 1
+	if Input.is_action_pressed("MoveLeft"):  # A key
+		move_direction.x += 1
+	
+	# Normalize the movement direction to avoid faster diagonal movement
+	if move_direction != Vector3.ZERO:
+		move_direction = move_direction.normalized()
+
+# Apply movement using WASD input
+func apply_input_movement(delta: float) -> void:
+	velocity = move_direction * speed
+	
+	# Rotate the character to face the direction of movement
+	if move_direction.length() > 0:
+		face_direction(global_position + move_direction)
+
+	# Apply the movement with move_and_slide
 	move_and_slide()
 
 # Rotate the character to face a specific direction.
@@ -63,3 +103,17 @@ func set_navigation_target() -> void:
 	
 	# Update the navigation agent with the new target position
 	navigation_agent.target_position = target_position
+
+# Handle platform-based navigation constraints
+func handle_platform_navigation() -> void:
+	# Assuming you want to check if the player is within the boundaries of the platform navigation region
+	# You can use the platform's navigation area to query valid positions or adjust as needed
+	
+	# Example: Ensure the player remains within the valid bounds of the platform navigation region
+	if platform_navigation_region:
+		var navigation_area = platform_navigation_region.get_child(0)  # Assuming it has a NavigationMesh or similar child
+		if navigation_area and navigation_area is NavigationRegion3D:
+			# Here, we can query the valid position within the navigation area or constrain the movement
+			var valid_position = navigation_area.get_closest_navigation_position(global_position)
+			if valid_position != global_position:
+				global_position = valid_position  # Correct the player position if needed
