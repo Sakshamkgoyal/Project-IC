@@ -8,11 +8,12 @@ var target_position: Vector3 = Vector3.ZERO
 var move_direction: Vector3 = Vector3.ZERO
 
 # Define the manual bounds of the navigation region
-var platform_bounds_min: Vector3 = Vector3(-10, 0, -10)  # Replace with actual bounds
-var platform_bounds_max: Vector3 = Vector3(10, 10, 10)   # Replace with actual bounds
+var platform_bounds_min  # Replace with actual bounds
+var platform_bounds_max    # Replace with actual bounds
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+	set_platform_bounds()
 	# Update movement direction based on WASD input.
 	handle_wasd_movement(delta)
 	
@@ -117,7 +118,8 @@ func set_navigation_target() -> void:
 	else:
 		# If no hit, set the navigation target to the current position
 		target_position = global_position
-	
+	print(platform_bounds_max)
+	print(platform_bounds_min)
 	# Clamp the navigation target within the platform bounds
 	target_position = clamp_vector3(target_position, platform_bounds_min, platform_bounds_max)
 	
@@ -136,3 +138,38 @@ func clamp_vector3(value: Vector3, min_bounds: Vector3, max_bounds: Vector3) -> 
 		clamp(value.y, min_bounds.y, max_bounds.y),
 		clamp(value.z, min_bounds.z, max_bounds.z)
 	)
+
+# Dynamically set platform bounds based on the navigation mesh vertices
+func set_platform_bounds() -> void:
+	# Get the navigation mesh and retrieve the vertices
+	var nav_mesh = platform_navigation_region.get_navigation_mesh()
+	var vertices = nav_mesh.get_vertices()
+	
+	# Set initial bounds to extreme values
+	platform_bounds_min = Vector3.INF
+	platform_bounds_max = -Vector3.INF
+	
+	# Loop through all vertices to find the min and max bounds
+	for vertex in vertices:
+		platform_bounds_min.x = min(platform_bounds_min.x, vertex.x)
+		platform_bounds_min.y = min(platform_bounds_min.y, vertex.y)
+		platform_bounds_min.z = min(platform_bounds_min.z, vertex.z)
+		
+		#print(platform_bounds_min)
+
+		
+		platform_bounds_max.x = max(platform_bounds_max.x, vertex.x)
+		platform_bounds_max.y = 20
+		platform_bounds_max.z = max(platform_bounds_max.z, vertex.z)
+		#print(platform_bounds_max)
+
+
+	
+	# Optionally, add a small margin to the bounds
+	#platform_bounds_min -= Vector3(1, 0, 1)
+	platform_bounds_max -= Vector3(1, 0, 1)
+	#print(platform_bounds_min)
+	#print(platform_bounds_max)
+
+
+	
