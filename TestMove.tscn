@@ -94,6 +94,7 @@ transform = Transform3D(33.6934, 0, 0, 0, 0.0316994, 0, 0, 0, 23.9388, 0, 0, 0)
 mesh = SubResource("BoxMesh_apsro")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="PlatformNavigationRegion3D/MeshInstance3D"]
+transform = Transform3D(0.998507, 0, 0, 0, 0.998507, 0, 0, 0, 0.998507, 0, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PlatformNavigationRegion3D/MeshInstance3D/StaticBody3D"]
 shape = SubResource("BoxShape3D_0eqpm")

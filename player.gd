@@ -1,11 +1,15 @@
 extends CharacterBody3D
 
 @onready var navigation_agent: NavigationAgent3D = $PlayerNavigationAgent3D
-@onready var platform_navigation_region: Node3D = $PlatformNavigationRegion3D  # Assuming it’s a sibling node
+@onready var platform_navigation_region: NavigationRegion3D = $"/root/Node3D/PlatformNavigationRegion3D"  # Assuming it’s a sibling node
 
 var speed: float = 7.0
 var target_position: Vector3 = Vector3.ZERO
 var move_direction: Vector3 = Vector3.ZERO
+
+# Define the manual bounds of the navigation region
+var platform_bounds_min: Vector3 = Vector3(-10, 0, -10)  # Replace with actual bounds
+var platform_bounds_max: Vector3 = Vector3(10, 10, 10)   # Replace with actual bounds
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
@@ -106,14 +110,13 @@ func set_navigation_target() -> void:
 
 # Handle platform-based navigation constraints
 func handle_platform_navigation() -> void:
-	# Assuming you want to check if the player is within the boundaries of the platform navigation region
-	# You can use the platform's navigation area to query valid positions or adjust as needed
-	
-	# Example: Ensure the player remains within the valid bounds of the platform navigation region
-	if platform_navigation_region:
-		var navigation_area = platform_navigation_region.get_child(0)  # Assuming it has a NavigationMesh or similar child
-		if navigation_area and navigation_area is NavigationRegion3D:
-			# Here, we can query the valid position within the navigation area or constrain the movement
-			var valid_position = navigation_area.get_closest_navigation_position(global_position)
-			if valid_position != global_position:
-				global_position = valid_position  # Correct the player position if needed
+	# Clamp the player's position within the manually defined bounds
+	global_position = clamp_vector3(global_position, platform_bounds_min, platform_bounds_max)
+
+# Clamp a Vector3 within specified bounds
+func clamp_vector3(value: Vector3, min_bounds: Vector3, max_bounds: Vector3) -> Vector3:
+	return Vector3(
+		clamp(value.x, min_bounds.x, max_bounds.x),
+		clamp(value.y, min_bounds.y, max_bounds.y),
+		clamp(value.z, min_bounds.z, max_bounds.z)
+	)
