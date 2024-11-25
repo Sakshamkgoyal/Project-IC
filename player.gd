@@ -49,10 +49,10 @@ func handle_wasd_movement(delta: float) -> void:
 		move_direction.z -= 1
 	if Input.is_action_pressed("MoveBackward"):  # S key
 		move_direction.z += 1
-	if Input.is_action_pressed("MoveRight"):  # D key
-		move_direction.x -= 1
 	if Input.is_action_pressed("MoveLeft"):  # A key
-		move_direction.x += 1
+		move_direction.x += 1  # Right movement should go in positive X direction
+	if Input.is_action_pressed("MoveRight"):  # D key
+		move_direction.x -= 1  # Left movement should go in negative X direction
 	
 	# Normalize the movement direction to avoid faster diagonal movement
 	if move_direction != Vector3.ZERO:
@@ -64,15 +64,28 @@ func apply_input_movement(delta: float) -> void:
 	
 	# Rotate the character to face the direction of movement
 	if move_direction.length() > 0:
-		face_direction(global_position + move_direction)
+		face_direction(global_position + move_direction * 2)  # Rotate toward movement direction
 
 	# Apply the movement with move_and_slide
 	move_and_slide()
 
-# Rotate the character to face a specific direction.
+# Rotate the character to face a specific direction smoothly
 func face_direction(target_pos: Vector3) -> void:
-	# Only rotate on the XZ plane (y is kept constant)
-	look_at(Vector3(target_pos.x, global_position.y, target_pos.z), Vector3.UP)
+	# Ensure that the target position is different from the current position
+	if global_position != target_pos:
+		# Calculate direction vector (ignoring vertical axis)
+		var direction = (target_pos - global_position).normalized()
+		direction.y = 0  # Ignore the Y axis for rotation
+		
+		# Calculate the angle between the forward vector and the direction
+		var target_angle = direction.angle_to(Vector3.FORWARD)  # Angle between direction and forward axis
+		
+		# Rotate based on the angle calculated (adjust for facing right)
+		if direction.x < 0:
+			target_angle = -target_angle  # Flip angle if moving left (negative X)
+
+		# Smoothly rotate towards the target angle using lerp_angle
+		rotation.y = lerp_angle(rotation.y, -target_angle, 0.1)  # 0.1 is the rotation speed
 
 # Handle input events for setting the navigation target.
 func _input(event: InputEvent) -> void:
