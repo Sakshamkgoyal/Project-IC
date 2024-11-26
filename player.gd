@@ -7,21 +7,24 @@ var speed: float = 7.0
 var target_position: Vector3 = Vector3.ZERO
 var move_direction: Vector3 = Vector3.ZERO
 
+var is_ctm_enabled: bool = true  # Toggle for Click-to-Move (CTM) movement
+
 # Define the manual bounds of the navigation region
 var platform_bounds_min  # Replace with actual bounds
-var platform_bounds_max    # Replace with actual bounds
+var platform_bounds_max  # Replace with actual bounds
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	set_platform_bounds()
-	# Update movement direction based on WASD input.
-	handle_wasd_movement(delta)
 	
-	# Check if the navigation is finished, if not move to the target point
-	if not navigation_agent.is_navigation_finished():
-		move_to_point(delta)
+	# Handle movement based on the current mode (CTM or WASD)
+	if is_ctm_enabled:
+		# Click-to-Move behavior
+		if not navigation_agent.is_navigation_finished():
+			move_to_point(delta)
 	else:
-		# If we have a navigation target, move towards it using WASD input
+		# WASD movement behavior
+		handle_wasd_movement(delta)
 		apply_input_movement(delta)
 	
 	# Apply platform navigation constraints, if necessary
@@ -51,9 +54,9 @@ func handle_wasd_movement(delta: float) -> void:
 	if Input.is_action_pressed("MoveBackward"):  # S key
 		move_direction.z += 1
 	if Input.is_action_pressed("MoveLeft"):  # A key
-		move_direction.x += 1  # Right movement should go in positive X direction
+		move_direction.x += 1
 	if Input.is_action_pressed("MoveRight"):  # D key
-		move_direction.x -= 1  # Left movement should go in negative X direction
+		move_direction.x -= 1
 	
 	# Normalize the movement direction to avoid faster diagonal movement
 	if move_direction != Vector3.ZERO:
@@ -79,18 +82,24 @@ func face_direction(target_pos: Vector3) -> void:
 		direction.y = 0  # Ignore the Y axis for rotation
 		
 		# Calculate the angle between the forward vector and the direction
-		var target_angle = direction.angle_to(Vector3.FORWARD)  # Angle between direction and forward axis
+		var target_angle = direction.angle_to(Vector3.FORWARD)
 		
-		# Rotate based on the angle calculated (adjust for facing right)
+		# Adjust the angle for left/right orientation
 		if direction.x < 0:
-			target_angle = -target_angle  # Flip angle if moving left (negative X)
+			target_angle = -target_angle
 
 		# Smoothly rotate towards the target angle using lerp_angle
 		rotation.y = lerp_angle(rotation.y, -target_angle, 0.1)  # 0.1 is the rotation speed
 
 # Handle input events for setting the navigation target.
 func _input(event: InputEvent) -> void:
-	if Input.is_action_just_pressed("LeftMouse"):
+	# Toggle between CTM and WASD on a specific key press
+	if Input.is_action_just_pressed("ui_select"):  # Example: Space key to toggle
+		is_ctm_enabled = not is_ctm_enabled
+		print("Click-to-Move Enabled:", is_ctm_enabled)
+	
+	# Set navigation target if CTM is enabled
+	if is_ctm_enabled and Input.is_action_just_pressed("LeftMouse"):
 		set_navigation_target()
 
 # Sets the target position for the navigation agent based on a raycast.
@@ -118,8 +127,7 @@ func set_navigation_target() -> void:
 	else:
 		# If no hit, set the navigation target to the current position
 		target_position = global_position
-	print(platform_bounds_max)
-	print(platform_bounds_min)
+	
 	# Clamp the navigation target within the platform bounds
 	target_position = clamp_vector3(target_position, platform_bounds_min, platform_bounds_max)
 	
@@ -141,35 +149,17 @@ func clamp_vector3(value: Vector3, min_bounds: Vector3, max_bounds: Vector3) -> 
 
 # Dynamically set platform bounds based on the navigation mesh vertices
 func set_platform_bounds() -> void:
-	# Get the navigation mesh and retrieve the vertices
 	var nav_mesh = platform_navigation_region.get_navigation_mesh()
 	var vertices = nav_mesh.get_vertices()
 	
-	# Set initial bounds to extreme values
 	platform_bounds_min = Vector3.INF
 	platform_bounds_max = -Vector3.INF
 	
-	# Loop through all vertices to find the min and max bounds
 	for vertex in vertices:
 		platform_bounds_min.x = min(platform_bounds_min.x, vertex.x)
 		platform_bounds_min.y = min(platform_bounds_min.y, vertex.y)
 		platform_bounds_min.z = min(platform_bounds_min.z, vertex.z)
 		
-		#print(platform_bounds_min)
-
-		
 		platform_bounds_max.x = max(platform_bounds_max.x, vertex.x)
 		platform_bounds_max.y = 20
 		platform_bounds_max.z = max(platform_bounds_max.z, vertex.z)
-		#print(platform_bounds_max)
-
-
-	
-	# Optionally, add a small margin to the bounds
-	#platform_bounds_min -= Vector3(1, 0, 1)
-	platform_bounds_max -= Vector3(1, 0, 1)
-	#print(platform_bounds_min)
-	#print(platform_bounds_max)
-
-
-	
